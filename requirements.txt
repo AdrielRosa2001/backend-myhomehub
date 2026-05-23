@@ -5,3 +5,4 @@ pydantic[email]
 python-jose[cryptography]
 python-multipart
 pwdlib[argon2]
+python-dotenv
