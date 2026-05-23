@@ -8,7 +8,7 @@ from os import getenv
 load_dotenv()
 
 # Configurações de Segurança (Em produção, coloque o SECRET_KEY em variáveis de ambiente .env)
-SECRET_KEY = getenv('SECRET_KEY')
+SECRET_KEY = getenv("SECRET_KEY", "b4e6dc10e48583f1cf2d162f292f5fff03bd1fb0d5dbb725aefcbe27d2be9247")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # Token válido por 7 dias
 

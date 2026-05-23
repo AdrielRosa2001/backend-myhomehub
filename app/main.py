@@ -11,7 +11,7 @@ db.connect()
 db.create_tables([Transaction, User], safe=True) # Crie a tabela User
 db.close()
 
-app = FastAPI(title="MyFinance API")
+app = FastAPI(title="MyFinance API", root_path="/api")
 
 app.add_middleware(
     CORSMiddleware,
