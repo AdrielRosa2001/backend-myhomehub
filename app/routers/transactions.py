@@ -20,7 +20,8 @@ def create_transaction(transaction: schemas.TransactionCreate, current_user: mod
         amount=transaction.amount,
         type=transaction.type.value,
         category=transaction.category,
-        date=transaction.date or models.date.today()
+        date=transaction.date or models.date.today(),
+        is_paid = transaction.is_paid
     )
     return db_transaction
 
@@ -68,6 +69,7 @@ def update_transaction(transaction_id: int, transaction: schemas.TransactionCrea
     db_transaction.type = transaction.type.value
     db_transaction.category = transaction.category
     db_transaction.date = transaction.date or db_transaction.date
+    db_transaction.is_paid = transaction.is_paid
     db_transaction.save()
     return db_transaction
 

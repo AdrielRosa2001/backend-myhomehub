@@ -12,6 +12,7 @@ class Transaction(BaseModel):
     type = pw.CharField()  # "receita" ou "despesa"
     category = pw.CharField(index=True)
     date = pw.DateField(default=date.today())
+    is_paid = pw.BooleanField(default=False)
 
     class Meta:
         table_name = "transactions"

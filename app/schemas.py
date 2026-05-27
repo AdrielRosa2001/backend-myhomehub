@@ -13,6 +13,7 @@ class TransactionBase(BaseModel):
     type: TransactionType
     category: str
     date: date
+    is_paid: bool = False
 
 class TransactionCreate(TransactionBase):
     pass
