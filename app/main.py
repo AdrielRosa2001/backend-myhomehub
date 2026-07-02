@@ -1,17 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import db
-from .models import Transaction
-from .routers import transactions, metrics
-from .models import Transaction, User # Importe o User
-from .routers import transactions, metrics, auth # Importe o auth
+from .models import Transaction, User, ShoppingList, ListItem
+from .routers import transactions, metrics, auth, lists
 
 # Inicia o banco e cria tabelas se não existirem
 db.connect()
-db.create_tables([Transaction, User], safe=True) # Crie a tabela User
+db.create_tables([Transaction, User, ShoppingList, ListItem], safe=True)
 db.close()
 
-app = FastAPI(title="MyFinance API", root_path="/api")
+app = FastAPI(title="MyHomeHub API", root_path="/api")
 
 app.add_middleware(
     CORSMiddleware,
@@ -24,7 +22,8 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(transactions.router)
 app.include_router(metrics.router)
+app.include_router(lists.router)
 
 @app.get("/")
 def root():
-    return {"message": "MyFinance API operando normalmente."}
+    return {"message": "MyHomeHub API operando normalmente."}

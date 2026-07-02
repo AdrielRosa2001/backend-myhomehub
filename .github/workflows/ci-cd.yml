@@ -1,0 +1,106 @@
+name: Backend MyHomeHub — CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  # ════════════════════════════════════════════════════════════
+  # JOB 1: Testes automatizados
+  # ════════════════════════════════════════════════════════════
+  tests:
+    name: Testes (pytest + coverage)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Notificar início do CI no Telegram
+        if: github.event_name == 'push'
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TO_TOKEN }}
+          format: markdown
+          message: |
+            🚀 *CI/CD Backend MyHomeHub Iniciado!*
+            👤 Autor: ${{ github.actor }}
+            📝 Commit: `${{ github.event.head_commit.message }}`
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependências
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Rodar testes com cobertura
+        run: |
+          pytest --cov=app --cov-report=xml --cov-report=term-missing --cov-fail-under=50
+
+      - name: Upload coverage to Codecov (opcional)
+        if: success()
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage.xml
+          flags: backend
+          fail_ci_if_error: false
+
+  # ════════════════════════════════════════════════════════════
+  # JOB 2: Docker build (valida que a imagem builda)
+  # ════════════════════════════════════════════════════════════
+  docker-build:
+    name: Validação de Build Docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build imagem Docker
+        run: docker build --build-arg INSTALL_ODBC=false -t myhomehub-backend .
+
+  # ════════════════════════════════════════════════════════════
+  # JOB 3: Deploy (VPS via self-hosted runner)
+  # ════════════════════════════════════════════════════════════
+  deploy:
+    name: Deploy na VPS
+    needs: [tests, docker-build]
+    runs-on: self-hosted
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+
+    steps:
+      - name: Disparar deploy
+        run: /home/ubuntu/scripts/deploy-backend-myhomehub.sh
+
+      - name: Notificar sucesso no Telegram
+        if: success()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TO_TOKEN }}
+          format: markdown
+          message: |
+            ✅ *Deploy do Backend MyHomeHub finalizado com sucesso!*
+            🐳 O container do backend já foi atualizado e reiniciado na VPS.
+
+      - name: Notificar falha no Telegram
+        if: failure()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TO_TOKEN }}
+          format: markdown
+          message: |
+            🚨 *Erro no CI/CD do Backend MyHomeHub!*
+            ❌ O pipeline falhou. Verifique os logs no GitHub Actions para identificar se o erro foi nos testes, no build ou no script de deploy da VPS.

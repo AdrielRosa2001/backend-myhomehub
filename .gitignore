@@ -17,3 +17,6 @@ wheels/
 
 #env
 .env
+
+# Others:
+MIGRATION_STEPS_DB.md
