@@ -1,7 +1,7 @@
 [project]
 name = "backend-myhomehub"
 version = "0.1.0"
-description = "Add your description here"
+description = "MyHomeHub Backend - FastAPI + Peewee + PostgreSQL"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -11,11 +11,15 @@ dependencies = [
     "pip>=26.1.2",
     "pwdlib[argon2]>=0.3.0",
     "pydantic[email]>=2.13.4",
-    "pytest>=9.1.1",
-    "pytest-asyncio>=1.4.0",
-    "pytest-cov>=7.1.0",
     "python-dotenv>=1.2.2",
     "python-jose[cryptography]>=3.5.0",
     "python-multipart>=0.0.29",
     "uvicorn>=0.47.0",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = []
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
