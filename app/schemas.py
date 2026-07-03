@@ -117,6 +117,7 @@ class ShoppingListResponse(BaseModel):
     icon: Optional[str] = None
     status: str
     position: int
+    total_price: float = 0.0
     created_at: datetime
     updated_at: datetime
     deleted_at: Optional[datetime] = None
@@ -134,6 +135,7 @@ class ShoppingListMinimal(BaseModel):
     icon: Optional[str] = None
     status: str
     position: int
+    total_price: float = 0.0
     created_at: datetime
     updated_at: datetime
     deleted_at: Optional[datetime] = None

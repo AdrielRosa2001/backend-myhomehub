@@ -49,7 +49,37 @@ def list_lists(
     if type:
         query = query.where(models.ShoppingList.type == type)
     query = query.order_by(models.ShoppingList.position, models.ShoppingList.created_at.desc())
-    return list(query)
+    lists = list(query)
+
+    # Anotar cada lista com o total_price
+    from peewee import fn
+    result = []
+    for lst in lists:
+        total = (models.ListItem
+                 .select(fn.COALESCE(fn.SUM(models.ListItem.price * models.ListItem.quantity), 0))
+                 .where(
+                     models.ListItem.list == lst.id,
+                     models.ListItem.is_completed == False,
+                 )
+                 .scalar())
+        # Converter para dict e adicionar total_price
+        d = {
+            "id": lst.id,
+            "owner_id": lst.owner_id,
+            "title": lst.title,
+            "description": lst.description,
+            "type": lst.type,
+            "icon": lst.icon,
+            "status": lst.status,
+            "position": lst.position,
+            "total_price": round(float(total or 0), 2),
+            "created_at": lst.created_at,
+            "updated_at": lst.updated_at,
+            "deleted_at": lst.deleted_at,
+        }
+        result.append(d)
+
+    return result
 
 
 @router.post("", response_model=schemas.ShoppingListResponse, status_code=201)
