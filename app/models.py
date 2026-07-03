@@ -21,6 +21,8 @@ class User(BaseModel):
     email = pw.CharField(unique=True, index=True)
     hashed_password = pw.CharField()
     is_active = pw.BooleanField(default=True)
+    is_superuser = pw.BooleanField(default=False)
+    modules = pw.TextField(default='["finance","lists"]')
 
     class Meta:
         table_name = "users"
@@ -50,6 +52,7 @@ class ListItem(BaseModel):
     quantity = pw.FloatField(null=True)
     unit = pw.CharField(max_length=20, null=True)
     category = pw.CharField(max_length=50, null=True)
+    price = pw.FloatField(null=True)
     created_by = pw.ForeignKeyField(User, null=True)
     created_at = pw.DateTimeField(default=datetime.now)
     updated_at = pw.DateTimeField(default=datetime.now)

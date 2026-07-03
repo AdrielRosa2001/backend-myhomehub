@@ -13,13 +13,12 @@ router = APIRouter(
 
 # ── Helper ─────────────────────────────────────────────────────────
 
-def _get_list_or_404(list_id: int, user: models.User) -> models.ShoppingList:
-    """Retorna a lista se existir e pertencer ao usuário, senão 404."""
+def _get_list_or_404(list_id: int) -> models.ShoppingList:
+    """Retorna a lista se existir, senão 404.
+    Nota: futuramente implementar verificação de permissão de acesso."""
     try:
         lst = models.ShoppingList.get_by_id(list_id)
     except models.ShoppingList.DoesNotExist:
-        raise HTTPException(status_code=404, detail="Lista não encontrada")
-    if lst.owner_id != user.id:
         raise HTTPException(status_code=404, detail="Lista não encontrada")
     return lst
 
@@ -42,10 +41,9 @@ def list_lists(
     _: None = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    """Lista todas as listas ativas do usuário. Filtros opcionais: type, status."""
-    query = models.ShoppingList.select().where(
-        models.ShoppingList.owner == current_user.id
-    )
+    """Lista todas as listas. Filtros opcionais: type, status.
+    Nota: futuramente implementar filtro por owner com permissões."""
+    query = models.ShoppingList.select()
     if status:
         query = query.where(models.ShoppingList.status == status)
     if type:
@@ -79,7 +77,7 @@ def get_list(
     current_user: models.User = Depends(get_current_user),
 ):
     """Retorna uma lista com seus itens."""
-    lst = _get_list_or_404(list_id, current_user)
+    lst = _get_list_or_404(list_id)
     # Fetch items explicitly so they appear in the response
     lst.items = list(
         models.ListItem.select()
@@ -97,7 +95,7 @@ def update_list(
     current_user: models.User = Depends(get_current_user),
 ):
     """Atualiza metadados de uma lista."""
-    lst = _get_list_or_404(list_id, current_user)
+    lst = _get_list_or_404(list_id)
     update_fields = data.model_dump(exclude_unset=True)
     if update_fields:
         update_fields["updated_at"] = datetime.now()
@@ -116,7 +114,7 @@ def delete_list(
     current_user: models.User = Depends(get_current_user),
 ):
     """Soft delete: marca como 'deleted' e registra deleted_at."""
-    lst = _get_list_or_404(list_id, current_user)
+    lst = _get_list_or_404(list_id)
     models.ShoppingList.update(
         status="deleted",
         deleted_at=datetime.now(),
@@ -132,7 +130,7 @@ def restore_list(
     current_user: models.User = Depends(get_current_user),
 ):
     """Restaura uma lista da lixeira."""
-    lst = _get_list_or_404(list_id, current_user)
+    lst = _get_list_or_404(list_id)
     if lst.status != "deleted":
         raise HTTPException(status_code=400, detail="A lista não está na lixeira")
     models.ShoppingList.update(
@@ -151,7 +149,7 @@ def duplicate_list(
     current_user: models.User = Depends(get_current_user),
 ):
     """Duplica uma lista. Os itens da cópia ficam desmarcados."""
-    original = _get_list_or_404(list_id, current_user)
+    original = _get_list_or_404(list_id)
 
     # Duplicar a lista
     new_list = models.ShoppingList.create(
@@ -192,7 +190,7 @@ def archive_list(
     current_user: models.User = Depends(get_current_user),
 ):
     """Arquiva ou desarquiva uma lista (toggle)."""
-    lst = _get_list_or_404(list_id, current_user)
+    lst = _get_list_or_404(list_id)
     new_status = "active" if lst.status == "archived" else "archived"
     models.ShoppingList.update(
         status=new_status,
@@ -211,7 +209,7 @@ def list_items(
     current_user: models.User = Depends(get_current_user),
 ):
     """Lista os itens de uma lista."""
-    _get_list_or_404(list_id, current_user)
+    _get_list_or_404(list_id)
     items = (
         models.ListItem.select()
         .where(models.ListItem.list == list_id)
@@ -228,7 +226,7 @@ def create_item(
     current_user: models.User = Depends(get_current_user),
 ):
     """Cria um item em uma lista."""
-    lst = _get_list_or_404(list_id, current_user)
+    lst = _get_list_or_404(list_id)
     item = models.ListItem.create(
         list=lst.id,
         text=data.text,
@@ -239,6 +237,7 @@ def create_item(
         quantity=data.quantity,
         unit=data.unit,
         category=data.category,
+        price=data.price,
         created_by=current_user.id,
     )
     return item
@@ -252,7 +251,7 @@ def reorder_items(
     current_user: models.User = Depends(get_current_user),
 ):
     """Reordena itens em lote (atualiza position de cada item)."""
-    lst = _get_list_or_404(list_id, current_user)
+    lst = _get_list_or_404(list_id)
     now = datetime.now()
 
     for pos_data in data.items:
@@ -279,7 +278,7 @@ def update_item(
     current_user: models.User = Depends(get_current_user),
 ):
     """Atualiza um item (inclui toggle is_completed)."""
-    lst = _get_list_or_404(list_id, current_user)
+    lst = _get_list_or_404(list_id)
     item = _get_item_or_404(item_id, lst)
 
     update_fields = data.model_dump(exclude_unset=True)
@@ -301,7 +300,7 @@ def delete_item(
     current_user: models.User = Depends(get_current_user),
 ):
     """Remove um item de uma lista."""
-    lst = _get_list_or_404(list_id, current_user)
+    lst = _get_list_or_404(list_id)
     item = _get_item_or_404(item_id, lst)
     models.ListItem.delete_by_id(item.id)
     return None

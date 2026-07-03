@@ -27,7 +27,7 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), _: 
         data={"sub": user.email}, expires_delta=access_token_expires
     )
     
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "token_type": "bearer", "is_superuser": user.is_superuser, "modules": user.modules}
 
 # Rota utilitária para registrar um usuário (Apenas para você criar seu primeiro acesso)
 @router.post("/register", response_model=schemas.UserResponse)

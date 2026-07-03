@@ -82,8 +82,8 @@ def get_transactions(
         sort_col = getattr(models.Transaction, sort_by)
         query = query.order_by(sort_col.asc() if order == "asc" else sort_col.desc())
     else:
-        # Default: ordenar por data decrescente
-        query = query.order_by(models.Transaction.date.desc())
+        # Default: ordenar por data crescente (mais antiga primeiro)
+        query = query.order_by(models.Transaction.date.asc())
 
     transactions = list(query.offset(skip).limit(limit))
     return transactions

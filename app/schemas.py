@@ -75,13 +75,22 @@ class UserResponse(BaseModel):
     id: int
     email: str
     is_active: bool
+    is_superuser: bool = False
+    modules: str = '["finance","lists"]'
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
+class UserUpdate(BaseModel):
+    email: Optional[str] = None
+    is_active: Optional[bool] = None
+    is_superuser: Optional[bool] = None
+    modules: Optional[str] = None
 
 class Token(BaseModel):
     access_token: str
     token_type: str
+    is_superuser: bool = False
+    modules: str = '["finance","lists"]'
 
 # ── Shopping List Schemas ──────────────────────────────────────────
 
@@ -142,6 +151,7 @@ class ListItemCreate(BaseModel):
     quantity: Optional[float] = None
     unit: Optional[str] = None
     category: Optional[str] = None
+    price: Optional[float] = None
 
 class ListItemUpdate(BaseModel):
     text: Optional[str] = None
@@ -152,6 +162,7 @@ class ListItemUpdate(BaseModel):
     quantity: Optional[float] = None
     unit: Optional[str] = None
     category: Optional[str] = None
+    price: Optional[float] = None
 
 class ListItemResponse(BaseModel):
     id: int
@@ -164,6 +175,7 @@ class ListItemResponse(BaseModel):
     quantity: Optional[float] = None
     unit: Optional[str] = None
     category: Optional[str] = None
+    price: Optional[float] = None
     created_by: Optional[int] = Field(default=None, validation_alias='created_by_id', serialization_alias='created_by')
     created_at: datetime
     updated_at: datetime

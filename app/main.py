@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import db
 from .models import Transaction, User, ShoppingList, ListItem
-from .routers import transactions, metrics, auth, lists
+from .routers import transactions, metrics, auth, lists, users
 
 # Inicia o banco e cria tabelas se não existirem
 db.connect()
@@ -23,6 +23,7 @@ app.include_router(auth.router)
 app.include_router(transactions.router)
 app.include_router(metrics.router)
 app.include_router(lists.router)
+app.include_router(users.router)
 
 @app.get("/")
 def root():
