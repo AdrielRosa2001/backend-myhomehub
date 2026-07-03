@@ -56,7 +56,7 @@ def list_lists(
     result = []
     for lst in lists:
         total = (models.ListItem
-                 .select(fn.COALESCE(fn.SUM(models.ListItem.price * models.ListItem.quantity), 0))
+                 .select(fn.COALESCE(fn.SUM(models.ListItem.price * fn.COALESCE(models.ListItem.quantity, 1)), 0))
                  .where(
                      models.ListItem.list == lst.id,
                      models.ListItem.is_completed == False,
@@ -114,6 +114,13 @@ def get_list(
         .where(models.ListItem.list == lst.id)
         .order_by(models.ListItem.position, models.ListItem.created_at)
     )
+    # Calcular total_price
+    from peewee import fn
+    total = (models.ListItem
+             .select(fn.COALESCE(fn.SUM(models.ListItem.price * fn.COALESCE(models.ListItem.quantity, 1)), 0))
+             .where(models.ListItem.list == lst.id, models.ListItem.is_completed == False)
+             .scalar())
+    lst.total_price = round(float(total or 0), 2)
     return lst
 
 
